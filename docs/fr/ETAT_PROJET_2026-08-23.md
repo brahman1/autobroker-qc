@@ -1,6 +1,6 @@
 # Point de reprise — AutoBroker QC
 
-Dernière mise à jour : 23 août 2026.
+Dernière mise à jour : 24 août 2026.
 
 Ce document résume l'état du projet et les décisions prises afin de pouvoir reprendre le travail après une interruption.
 
@@ -24,6 +24,7 @@ Créer une plateforme canadienne de courtage d'encans automobiles, meilleure que
 - Endpoint de génération de facture/contrat PDF simulé, protégé par l’authentification.
 - Protection locale des enchères contre les rafales de mises et les montants anormalement élevés; incidents enregistrés dans l’audit.
 - SEO de base : métadonnées, `robots.txt`, sitemap statique; workflow CI de validation ajouté.
+- Interface bilingue français/anglais : sélecteur de langue persistant, catalogue de traductions centralisé, dates/nombres adaptés à la langue et métadonnées SEO bilingues.
 - PostgreSQL/Prisma avec migrations appliquées et jeu de données de démonstration.
 - Frontend modernisé, contrastes corrigés et redirection `/vehicule` vers `/vehicules`.
 
@@ -76,6 +77,21 @@ Tester ensuite une caution avec une identité KYC `VERIFIED` qui ne possède pas
 - `ADMIN` : tous les droits ci-dessus, avec attribution des rôles utilisateurs.
 
 Les règles sont appliquées dans l’API et masquent aussi les écrans/actions non autorisés dans le frontend. Un changement de rôle est strictement limité à `ADMIN` et les rôles acceptés sont validés côté serveur.
+
+## État Git et reprise
+
+- Dépôt distant : `https://github.com/brahman1/autobroker-qc`.
+- Branche de travail : `main`.
+- Dernier commit distant : `a7c0f3f` (`chore: exclude local database and test artifacts`).
+- L’arbre de travail est propre au moment de cette sauvegarde.
+- Les secrets, fichiers `.env`, base locale Prisma et résultats de tests sont exclus de Git.
+- Vérifications finales : lint et build frontend réussis; tests E2E frontend : `6 passed`, `2 skipped` (intégrations Stripe/SFTP réelles sans accès partenaire).
+
+## Déploiement Render — prochaine étape
+
+Le backend peut être publié comme **Web Service** et le frontend comme **Static Site**, avec une base PostgreSQL Render. Avant le premier déploiement frontend, adapter `apps/frontend/src/lib/api.ts` afin d’utiliser `VITE_API_URL` lorsqu’elle est définie au lieu de toujours utiliser `/api`. Configurer aussi `VITE_SOCKET_URL` avec l’URL du backend.
+
+Variables minimales backend Render : `NODE_ENV=production`, `APP_PORT=10000`, `DATABASE_URL`, `JWT_SECRET`, `USE_MOCK_REDIS=true`, `USE_MOCK_COPART=true`, `USE_MOCK_STRIPE=true`, puis `CORS_ORIGINS` et `FRONTEND_URL` après création du site statique. Les clés Stripe de test doivent rester exclusivement dans les variables d’environnement Render.
 
 ## Travaux encore réalisables sans intégration externe
 
