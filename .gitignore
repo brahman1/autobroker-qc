@@ -45,6 +45,8 @@ desktop.ini
 # Tests
 coverage/
 .nyc_output/
+test-results/
+apps/frontend/test-results/
 
 # Vite
 .vite/
@@ -58,3 +60,4 @@ coverage/
 # Données temporaires
 tmp/
 temp/
+apps/backend/prisma/dev.db
