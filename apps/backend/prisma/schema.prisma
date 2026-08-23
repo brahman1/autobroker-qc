@@ -1,0 +1,293 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String    @id @default(uuid())
+  email            String    @unique
+  password         String
+  firstName        String
+  lastName         String
+  phone            String?
+  role             String    @default("CLIENT") // ADMIN | OPERATIONS | FINANCE | SUPPORT | INSPECTOR | PARTNER | CLIENT
+  kycStatus        String    @default("PENDING") // PENDING | VERIFIED | REJECTED
+  stripeCustomerId String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  bids             Bid[]
+  deposits         Deposit[]
+  wonAuctions      Auction[] @relation("AuctionWinner")
+  watchlist        Watchlist[]
+  savedSearches    SavedSearch[]
+  notifications    Notification[]
+  orders           Order[]
+  offers           Offer[]
+  documents        Document[]
+}
+
+model Vehicle {
+  id                   String    @id @default(uuid())
+  make                 String
+  model                String
+  year                 Int
+  vin                  String    @unique
+  saaqStatus           String    // CLEAN | VGA | SCRAP
+  mileage              Int
+  condition            String    // RUNS_AND_DRIVES | STARTS_BUT_DAMAGED | STATIONARY
+  fuelType             String    // ESSENCE | DIESEL | ELECTRIQUE | HYBRIDE
+  primaryDamage        String
+  images               String[]
+  estimatedRetailValue Float
+  location             String
+  category             String    @default("CAR")
+  auctionProvider      String    @default("AUTOBROKER_DEMO")
+  lotNumber            String?   @unique
+  titleType            String    @default("CLEAN")
+  secondaryDamage      String?
+  description          String?
+  hasKeys              Boolean   @default(true)
+  runAndDrive          Boolean   @default(false)
+  buyNowPrice          Float?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  auctions             Auction[]
+  watchlist            Watchlist[]
+  orders               Order[]
+  offers               Offer[]
+  transportQuotes      TransportQuote[]
+}
+
+model Auction {
+  id               String    @id @default(uuid())
+  vehicleId        String
+  status           String    // SCHEDULED | LIVE | ENDED | CANCELLED
+  startingBid      Float
+  currentBid       Float     @default(0)
+  scheduledStartAt DateTime
+  scheduledEndAt   DateTime
+  bidCount         Int       @default(0)
+  brokerageFee     Float     @default(15)
+  buyNowPrice      Float?
+  currentWinnerId  String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  vehicle          Vehicle   @relation(fields: [vehicleId], references: [id])
+  currentWinner    User?     @relation("AuctionWinner", fields: [currentWinnerId], references: [id])
+  bids             Bid[]
+  orders           Order[]
+  offers           Offer[]
+}
+
+model Bid {
+  id              String   @id @default(uuid())
+  auctionId       String
+  userId          String
+  maxBidAmount    Float
+  actualBidAmount Float
+  status          String   // WINNING | OUTBID | REJECTED
+  timestamp       DateTime @default(now())
+
+  auction         Auction  @relation(fields: [auctionId], references: [id])
+  user            User     @relation(fields: [userId], references: [id])
+}
+
+model Deposit {
+  id                    String   @id @default(uuid())
+  userId                String
+  amount                Float    // en cents
+  currency              String   @default("cad")
+  status                String   // HOLD | CAPTURED | RELEASED
+  stripePaymentIntentId String   @unique
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  user                  User     @relation(fields: [userId], references: [id])
+}
+
+model Watchlist {
+  id        String   @id @default(uuid())
+  userId    String
+  vehicleId String
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, vehicleId])
+}
+
+model SavedSearch {
+  id        String   @id @default(uuid())
+  userId    String
+  name      String
+  filters   Json
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  type      String
+  title     String
+  message   String
+  payload   Json?
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Offer {
+  id        String   @id @default(uuid())
+  userId    String
+  vehicleId String
+  auctionId String?
+  amount    Float
+  status    String   @default("PENDING")
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id])
+  auction   Auction? @relation(fields: [auctionId], references: [id])
+}
+
+model Order {
+  id              String   @id @default(uuid())
+  orderNumber     String   @unique
+  userId          String
+  vehicleId       String
+  auctionId       String?
+  status          String   @default("AWAITING_PAYMENT")
+  winningBid      Float
+  buyerFee        Float
+  transportAmount Float    @default(0)
+  taxesAmount     Float    @default(0)
+  totalAmount     Float
+  paymentStatus   String   @default("PENDING")
+  paymentReference String? @unique
+  dueAt           DateTime
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user            User     @relation(fields: [userId], references: [id])
+  vehicle         Vehicle  @relation(fields: [vehicleId], references: [id])
+  auction         Auction? @relation(fields: [auctionId], references: [id])
+  documents       Document[]
+  transportQuotes TransportQuote[]
+}
+
+model Document {
+  id          String   @id @default(uuid())
+  userId      String
+  orderId     String?
+  type        String
+  fileName    String
+  storageUrl  String
+  status      String   @default("AVAILABLE")
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  order       Order?   @relation(fields: [orderId], references: [id])
+}
+
+model TransportQuote {
+  id                    String   @id @default(uuid())
+  userId                String
+  vehicleId             String
+  orderId               String?
+  destinationPostalCode String
+  serviceLevel          String
+  amount                Float
+  currency              String   @default("CAD")
+  status                String   @default("QUOTED")
+  estimatedPickupAt     DateTime?
+  estimatedDeliveryAt   DateTime?
+  createdAt             DateTime @default(now())
+
+  vehicle               Vehicle  @relation(fields: [vehicleId], references: [id])
+  order                 Order?   @relation(fields: [orderId], references: [id])
+}
+
+model Dispute {
+  id          String   @id @default(uuid())
+  userId      String
+  orderId     String?
+  subject     String
+  description String
+  status      String   @default("OPEN") // OPEN | IN_REVIEW | RESOLVED | CLOSED
+  resolution  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  actorUserId String?
+  action     String
+  entityType String
+  entityId   String
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([actorUserId, createdAt])
+}
+
+model PaymentEvent {
+  id          String   @id @default(uuid())
+  userId      String
+  orderId     String?
+  depositId   String?
+  type        String
+  status      String
+  amount      Float
+  currency    String   @default("CAD")
+  reference   String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([orderId, createdAt])
+}
+
+model CommunicationLog {
+  id        String   @id @default(uuid())
+  userId    String
+  channel   String
+  status    String   @default("SIMULATED")
+  subject   String
+  body      String
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model FraudFlag {
+  id          String   @id @default(uuid())
+  userId      String
+  auctionId   String?
+  type        String
+  severity    String
+  details     Json?
+  status      String   @default("OPEN")
+  reviewedBy  String?
+  reviewedAt  DateTime?
+  createdAt   DateTime @default(now())
+
+  @@index([status, createdAt])
+  @@index([userId, createdAt])
+}

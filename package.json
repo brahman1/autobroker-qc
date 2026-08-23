@@ -1,0 +1,30 @@
+{
+  "name": "autobroker-qc",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Plateforme de courtage en enchères automobiles — Marché Québécois",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=apps/backend & npm run dev --workspace=apps/frontend",
+    "dev:backend": "npm run dev --workspace=apps/backend",
+    "dev:frontend": "npm run dev --workspace=apps/frontend",
+    "build": "npm run build --workspaces",
+    "seed": "npm run seed --workspace=apps/backend",
+    "install:all": "npm install",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspace=apps/backend",
+    "test:e2e": "npm run test:e2e --workspace=apps/frontend"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.22.0",
+    "eslint": "^9.22.0",
+    "typescript-eslint": "^8.26.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}

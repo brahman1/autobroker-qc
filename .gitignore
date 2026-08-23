@@ -1,0 +1,60 @@
+# ========================
+# AutoBroker QC — .gitignore
+# ========================
+
+# Dépendances Node
+node_modules/
+.pnp
+.pnp.js
+
+# Build output
+dist/
+build/
+.next/
+out/
+
+# Variables d'environnement (JAMAIS commiter les vraies clés!)
+.env
+.env.local
+.env.production
+# .env.example est commité intentionnellement
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# TypeScript
+*.tsbuildinfo
+
+# Tests
+coverage/
+.nyc_output/
+
+# Vite
+.vite/
+
+# Nest
+*.js.map
+
+# Docker
+.dockerignore
+
+# Données temporaires
+tmp/
+temp/

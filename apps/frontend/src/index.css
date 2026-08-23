@@ -1,0 +1,23 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #F5F7FA;
+  color: #0B1F33;
+}
+
+* {
+  border-color: #E5E7EB;
+}
+
+::selection {
+  background: #FDE7CC;
+  color: #0B1F33;
+}
