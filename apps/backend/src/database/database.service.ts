@@ -184,12 +184,20 @@ export class DatabaseService implements OnModuleInit {
     })));
 
     const primaryVehicle = vehicles[0];
-    const deposit = await this.prisma.deposit.findFirst({ where: { userId: client.id, status: 'HOLD' } });
-    if (!deposit) {
-      await this.prisma.deposit.create({
-        data: { userId: client.id, amount: 60000, currency: 'cad', status: 'HOLD', stripePaymentIntentId: `pi_mock_hold_${client.id}` },
-      });
-    }
+    // Le seed doit pouvoir être rejoué au démarrage d'un environnement de démonstration.
+    // L'identifiant de Payment Intent est unique : l'upsert évite une erreur si une
+    // caution de démonstration avait déjà été créée lors d'un déploiement précédent.
+    await this.prisma.deposit.upsert({
+      where: { stripePaymentIntentId: `pi_mock_hold_${client.id}` },
+      update: {},
+      create: {
+        userId: client.id,
+        amount: 60000,
+        currency: 'cad',
+        status: 'HOLD',
+        stripePaymentIntentId: `pi_mock_hold_${client.id}`,
+      },
+    });
 
     const lastVehicle = vehicles[vehicles.length - 1];
     await this.prisma.watchlist.upsert({
